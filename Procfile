@@ -1,1 +1,1 @@
-worker: python import_discord.py
+web: python import_discord.py
