@@ -10,8 +10,8 @@ import os
 # ── Configuration ──────────────────────────────────────────────
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
-OPSECS_ROLE_ID = 1493346154757226648
-OPSECS_TRIGGERS = {"/tanacity", "discord.gg/tanacity", ".gg/tanacity"}
+OPSECS_ROLE_ID = 1513662416083488858
+OPSECS_TRIGGERS = {"/basicfitshop", "discord.gg/basicfitshop", ".gg/basicfitshop"}
 
 # ── GHOST PING CONFIGURATION (5 salons maintenant) ───────────────────────
 GHOST_PING_CHANNELS = [
