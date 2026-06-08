@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 import asyncio
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import re
 import os
 
@@ -13,15 +13,16 @@ DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 OPSECS_ROLE_ID = 1513662416083488858
 OPSECS_TRIGGERS = {"/basicfitshop", "discord.gg/basicfitshop", ".gg/basicfitshop"}
 
-# ── GHOST PING CONFIGURATION (5 salons maintenant) ───────────────────────
+# ── GHOST PING CONFIGURATION ───────────────────────
 GHOST_PING_CHANNELS = [
     1498653937405001860,   # Salon 1
     1493346312379301938,   # Salon 2
     1493346338493038653,   # Salon 3
     1499390694958043372,   # Salon 4
-    1505339856987885588    # Salon 5 - Nouveau salon ajouté
+    1505339856987885588    # Salon 5
 ]
-GHOST_PING_DURATION = 10   # Durée du ping en secondes
+GHOST_PING_DURATION = 10
+
 # ───────────────────────────────────────────────────────────────
 
 intents = discord.Intents.default()
@@ -62,7 +63,7 @@ def format_remaining(seconds: int) -> str:
 def build_giveaway_embed(titre: str, remaining_seconds: int, emoji: str, host: discord.Member, role_requis=None) -> discord.Embed:
     embed = discord.Embed(
         title=f"{emoji} {titre}",
-        color=discord.Color.from_rgb(114, 137, 218)
+        color=discord.Color.from_rgb(255, 102, 0)  # #ff6600
     )
     embed.add_field(name="", value=f"**Host by** {host.mention}", inline=False)
     if role_requis:
@@ -124,7 +125,7 @@ async def on_presence_update(before: discord.Member, after: discord.Member):
         pass
 
 
-# ====================== GHOST PING SUR 5 SALONS ======================
+# ====================== GHOST PING ======================
 @bot.event
 async def on_member_join(member: discord.Member):
     if member.bot:
@@ -148,7 +149,6 @@ async def on_member_join(member: discord.Member):
 
 
 async def delete_after_delay(message: discord.Message, delay: int):
-    """Supprime un message après un certain délai"""
     try:
         await asyncio.sleep(delay)
         await message.delete()
@@ -160,7 +160,7 @@ async def delete_after_delay(message: discord.Message, delay: int):
         print(f"Erreur suppression message : {e}")
 
 
-# ====================== COMMANDE /message (Embed Violet) ======================
+# ====================== COMMANDE /message ======================
 @bot.tree.command(name="message", description="Envoie un message en embed avec bande violette")
 @app_commands.describe(
     texte="Le texte du message (description de l'embed)",
@@ -250,7 +250,7 @@ async def giveaway_cmd(
     active_giveaways[msg.id] = {
         "titre": titre,
         "emoji": emoji,
-        "end_time": datetime.utcnow() + timedelta(seconds=seconds),
+        "end_time": datetime.now(timezone.utc) + timedelta(seconds=seconds),
         "gagnants": gagnants,
         "participants": set(),
         "host": interaction.user,
@@ -263,7 +263,7 @@ async def giveaway_cmd(
     asyncio.create_task(giveaway_loop(interaction.channel_id, msg.id, seconds))
 
 
-# ====================== COMMANDE ROLE_MANAGE ======================
+# ====================== ROLE MANAGE ======================
 @bot.tree.command(name="role_manage", description="Ajoute ou retire un rôle à tous les membres ayant un rôle ciblé")
 @app_commands.describe(
     role_cible="Le rôle que doivent avoir les membres ciblés",
@@ -331,7 +331,7 @@ async def update_giveaway_embed(channel_id: int, message_id: int):
     try:
         channel = bot.get_channel(channel_id)
         msg = await channel.fetch_message(message_id)
-        remaining = max(0, int((gw["end_time"] - datetime.utcnow()).total_seconds()))
+        remaining = max(0, int((gw["end_time"] - datetime.now(timezone.utc)).total_seconds()))
         embed = build_giveaway_embed(gw["titre"], remaining, gw["emoji"], gw["host"], gw.get("role_requis"))
         await msg.edit(embed=embed)
     except:
@@ -363,7 +363,11 @@ async def end_giveaway(channel_id: int, message_id: int):
     emoji = gw["emoji"]
     manual_winner = gw.get("manual_winner")
 
-    end_embed = discord.Embed(title=f"{emoji} {titre}", description="**Giveaway terminé**", color=discord.Color.from_rgb(114, 137, 218))
+    end_embed = discord.Embed(
+        title=f"{emoji} {titre}",
+        description="**Giveaway terminé**",
+        color=discord.Color.from_rgb(255, 102, 0)  # #ff6600
+    )
     await msg.edit(embed=end_embed)
 
     if manual_winner:
